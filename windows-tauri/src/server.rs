@@ -91,6 +91,7 @@ async fn handle_pair_request(
 
         state.storage_mgr.add_pending_request(device);
         crate::window_manager::show_main_window(&state.app_handle);
+        crate::window_manager::show_micro_window(&state.app_handle, &format!("📱 Pairing Request from {}! Open Control Center to Accept", req.sender_name)).ok();
 
         use tauri::Emitter;
         let _ = state.app_handle.emit("new-pairing-request", req.sender_name.clone());

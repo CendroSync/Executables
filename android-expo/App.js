@@ -159,17 +159,44 @@ export default function App() {
   };
 
   const handlePairDevice = async () => {
-    if (!selectedDevice) {
-      Alert.alert('Error', 'Please select a discovered device first');
-      return;
-    }
     if (!targetCode.trim()) {
       Alert.alert('Error', 'Please enter a device code');
       return;
     }
 
+    let targetIp = selectedDevice ? selectedDevice.ip : (discoveredDevices[0] ? discoveredDevices[0].ip : null);
+
+    if (!targetIp) {
+      try {
+        const ip = await Network.getIpAddressAsync();
+        const parts = ip.split('.');
+        if (parts.length === 4) {
+          const subnet = `${parts[0]}.${parts[1]}.${parts[2]}`;
+          for (let i = 1; i <= 254; i++) {
+            const testIp = `${subnet}.${i}`;
+            if (testIp === ip) continue;
+            try {
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 400);
+              const res = await fetch(`http://${testIp}:52431/api/v1/ping`, { signal: controller.signal });
+              clearTimeout(timeout);
+              if (res.ok) {
+                targetIp = testIp;
+                break;
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!targetIp) {
+      Alert.alert('Device Not Found', 'Could not find any Windows PC on your Wi-Fi network. Ensure CendrosyncP2P is running on your PC.');
+      return;
+    }
+
     try {
-      const response = await fetch(`http://${selectedDevice.ip}:52431/api/v1/pair`, {
+      const response = await fetch(`http://${targetIp}:52431/api/v1/pair`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -180,23 +207,22 @@ export default function App() {
       });
 
       if (response.ok) {
-        // Assume Windows accepted it or put it in pending, we add to our paired list
         const paired = await StorageTracker.getPairedDevices();
         const updated = paired.filter(d => d.code !== targetCode);
         updated.push({
           code: targetCode,
-          name: selectedDevice.name || 'Windows PC',
-          ip: selectedDevice.ip,
+          name: 'Windows PC',
+          ip: targetIp,
           trusted: true
         });
         await StorageTracker.setPairedDevices(updated);
         await refreshDevices();
-        Alert.alert('Pair Request Sent', `Sent pairing request to ${targetCode}. Please accept it on your Windows PC!`);
+        Alert.alert('Pair Request Sent 🚀', `Sent pairing request to ${targetCode}. Check your Windows screen to click Accept!`);
       } else {
         Alert.alert('Pairing Failed', 'Could not reach Windows PC on local Wi-Fi.');
       }
     } catch (e) {
-      Alert.alert('Connection Error', 'Ensure Windows app is running and on the same Wi-Fi.');
+      Alert.alert('Connection Error', 'Ensure CendrosyncP2P is open on Windows PC.');
     }
   };
 
@@ -339,22 +365,20 @@ export default function App() {
             </TouchableOpacity>
           ))}
 
-          {selectedDevice && (
-            <View style={[styles.inputRow, {marginTop: 15}]}>
-              <TextInput
-                style={styles.input}
-                value={targetCode}
-                onChangeText={setTargetCode}
-                placeholder="Pairing Code (e.g. XY792B)"
-                placeholderTextColor="#6b7280"
-                autoCapitalize="characters"
-                maxLength={6}
-              />
-              <TouchableOpacity style={styles.saveBtn} onPress={handlePairDevice}>
-                <Text style={styles.saveBtnText}>Connect</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={[styles.inputRow, {marginTop: 15}]}>
+            <TextInput
+              style={styles.input}
+              value={targetCode}
+              onChangeText={setTargetCode}
+              placeholder="Pairing Code (e.g. XY792B)"
+              placeholderTextColor="#6b7280"
+              autoCapitalize="characters"
+              maxLength={6}
+            />
+            <TouchableOpacity style={styles.saveBtn} onPress={handlePairDevice}>
+              <Text style={styles.saveBtnText}>Connect</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Pending Requests */}
@@ -553,6 +577,8 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '600',
     fontSize: 14,
+    flex: 1,
+    marginRight: 8,
   },
   deviceItemIp: {
     color: '#6b7280',
@@ -625,6 +651,7 @@ const styles = StyleSheet.create({
   historyItemMain: {
     flex: 1,
     marginRight: 10,
+    overflow: 'hidden',
   },
   tagSent: {
     color: '#818cf8',
@@ -642,6 +669,7 @@ const styles = StyleSheet.create({
     color: '#d1d5db',
     fontSize: 13,
     fontFamily: 'monospace',
+    flexWrap: 'wrap',
   },
   historyItemActions: {
     flexDirection: 'row',
