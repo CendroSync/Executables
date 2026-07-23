@@ -37,6 +37,8 @@
   },
   "bundle": {
     "active": true,
+    "publisher": "Cendronyx",
+    "copyright": "Copyright © 2026 Cendronyx. All rights reserved.",
     "targets": "all",
     "icon": [
       "icons/32x32.png",
