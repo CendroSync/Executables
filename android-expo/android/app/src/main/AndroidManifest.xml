@@ -27,7 +27,7 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="p2pclipboard"/>
+        <data android:scheme="cendrosyncp2p"/>
       </intent-filter>
       <intent-filter data-generated="true">
         <action android:name="android.intent.action.SEND"/>
