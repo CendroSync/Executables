@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "CendroSync",
+    "slug": "cendrosync",
+    "scheme": "cendrosync",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#12141c"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#12141c"
+      },
+      "package": "com.cendrosync.app",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_WIFI_STATE",
+        "ACCESS_NETWORK_STATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "SEND",
+          "category": [
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "text/plain"
+            }
+          ]
+        }
+      ]
+    },
+    "plugins": [
+      [
+        "expo-share-intent",
+        {
+          "android": {
+            "action": "SEND",
+            "category": "DEFAULT",
+            "mimeType": "text/plain"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ShareExtension",
+                  "bundleIdentifier": "undefined.share-extension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.undefined"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "b4ead742-13f2-4d7e-9cd5-1145c6ae8f19"
+      }
+    }
+  }
+}

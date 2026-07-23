@@ -1,0 +1,32 @@
+{
+  "name": "android-expo-p2p-clipboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "prebuild": "expo prebuild --platform android",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "@notifee/react-native": "^9.1.8",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~57.0.0",
+    "expo-clipboard": "~57.0.1",
+    "expo-network": "~57.0.1",
+    "expo-share-intent": "^8.0.1",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
+    "node-forge": "^1.4.0",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-get-random-values": "~1.11.0",
+    "react-native-tcp-socket": "^6.0.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@types/react": "~19.2.4",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}

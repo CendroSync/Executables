@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "P2PClipboardPayload",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "message_id",
+    "sender_id",
+    "sender_name",
+    "timestamp",
+    "nonce",
+    "payload",
+    "tag",
+    "signature"
+  ],
+  "properties": {
+    "protocol_version": {
+      "type": "string",
+      "example": "1.0"
+    },
+    "message_id": {
+      "type": "string",
+      "format": "uuid",
+      "example": "c56a4180-65aa-42ec-a945-5fd21dec0538"
+    },
+    "sender_id": {
+      "type": "string",
+      "example": "win-desktop-992a"
+    },
+    "sender_name": {
+      "type": "string",
+      "example": "Windows Workstation"
+    },
+    "timestamp": {
+      "type": "integer",
+      "example": 1721674134
+    },
+    "nonce": {
+      "type": "string",
+      "description": "Base64 encoded 12-byte initialization vector (IV) for AES-256-GCM",
+      "example": "dGVzdF9ub25jZV8xMg=="
+    },
+    "payload": {
+      "type": "string",
+      "description": "Base64 encoded AES-256-GCM ciphertext of the clipboard text",
+      "example": "Z3ZkZmFzZGY4OTc5ODdhZHNmYXNm"
+    },
+    "tag": {
+      "type": "string",
+      "description": "Base64 encoded 16-byte authentication tag for AES-256-GCM",
+      "example": "YWN0dWFsX3RhZ18xNmJ5dGU="
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64 encoded RSA-SHA256 signature of (message_id + timestamp + payload)",
+      "example": "cnNhX3NpZ25hdHVyZV9iYXNlNjQ="
+    }
+  }
+}
