@@ -16,6 +16,7 @@ jobs:
   build-windows:
     name: Build Windows Desktop App (.exe)
     runs-on: windows-latest
+    environment: CendroSync
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
