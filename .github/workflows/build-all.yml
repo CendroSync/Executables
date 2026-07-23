@@ -45,7 +45,10 @@ jobs:
         shell: powershell
         run: |
           $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Cendronyx, O=Cendronyx, C=US" -CertStoreLocation cert:\CurrentUser\My
-          Get-ChildItem -Path windows-tauri/target/release -Recurse -Include *.exe,*.msi | ForEach-Object {
+          Get-ChildItem -Path windows-tauri/target/release/bundle -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | ForEach-Object {
+            Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
+          }
+          Get-ChildItem -Path windows-tauri/target/release -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
             Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
           }
 
