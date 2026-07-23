@@ -175,11 +175,6 @@ async fn handle_sync_payload(
 
             println!("[Server] Successfully updated clipboard silently!");
 
-            if let Some(milestone) = state.storage_mgr.increment_transfers() {
-                println!("[Milestone] Transfer threshold reached: {}", milestone);
-                crate::window_manager::show_donation_trigger(&state.app_handle, milestone);
-            }
-
             (StatusCode::OK, "Clipboard synchronized successfully")
         }
         Err(err) => {

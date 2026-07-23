@@ -27,8 +27,6 @@ pub struct HistoryItem {
 pub struct AppConfig {
     pub device_code: String,
     pub device_name: String,
-    pub transfers_count: u32,
-    pub never_ask_again: bool,
     pub paired_devices: Vec<PairedDevice>,
     pub pending_requests: Vec<PairedDevice>,
     pub history: Vec<HistoryItem>,
@@ -48,9 +46,7 @@ impl Default for AppConfig {
 
         Self {
             device_code: code,
-            device_name: "CendroSync Windows PC".to_string(),
-            transfers_count: 0,
-            never_ask_again: false,
+            device_name: "CendrosyncP2P Windows PC".to_string(),
             paired_devices: Vec::new(),
             pending_requests: Vec::new(),
             history: Vec::new(),
@@ -68,7 +64,7 @@ pub struct StorageManager {
 impl StorageManager {
     pub fn new() -> Self {
         let mut config_dir = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
-        config_dir.push("cendrosync");
+        config_dir.push("cendrosyncp2p");
         fs::create_dir_all(&config_dir).ok();
         let config_path = config_dir.join("config.json");
 
@@ -185,27 +181,5 @@ impl StorageManager {
         }
         self.save();
     }
-
-    pub fn increment_transfers(&self) -> Option<u32> {
-        let mut cfg = self.config.lock().ok()?;
-        cfg.transfers_count += 1;
-        let count = cfg.transfers_count;
-        let never_ask = cfg.never_ask_again;
-
-        drop(cfg);
-        self.save();
-
-        if !never_ask && matches!(count, 10 | 30 | 50 | 100) {
-            Some(count)
-        } else {
-            None
-        }
-    }
-
-    pub fn set_never_ask_again(&self) {
-        if let Ok(mut cfg) = self.config.lock() {
-            cfg.never_ask_again = true;
-        }
-        self.save();
-    }
 }
+

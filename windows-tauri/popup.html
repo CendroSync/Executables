@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clipboard Quick Sync</title>
+  <title>CendrosyncP2P Quick Sync</title>
   <style>
     :root {
       --bg: #12141c;
@@ -13,7 +13,6 @@
       --text: #f3f4f6;
       --text-muted: #9ca3af;
       --border: rgba(255, 255, 255, 0.08);
-      --danger: #ef4444;
     }
 
     * {
@@ -64,6 +63,11 @@
       box-shadow: 0 0 8px var(--accent);
     }
 
+    .footer-text {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
     .snippet-preview {
       font-size: 12px;
       color: var(--text-muted);
@@ -112,32 +116,15 @@
       background: rgba(255, 255, 255, 0.05);
       color: var(--text);
     }
-
-    /* Milestone Donation Card Overlay */
-    #donation-overlay {
-      display: none;
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      border-radius: 12px;
-      padding: 12px;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .donation-text {
-      font-size: 12px;
-      line-height: 1.4;
-      color: var(--text);
-    }
   </style>
 </head>
 <body>
   <div class="header">
     <div class="title">
       <span class="title-icon"></span>
-      P2P Clipboard Sync
+      CendrosyncP2P
     </div>
+    <div class="footer-text">Made with ❤️ by Cendronyx</div>
   </div>
 
   <div class="snippet-preview" id="snippet">Text copied to clipboard</div>
@@ -147,28 +134,11 @@
     <button class="btn-ignore" onclick="handleIgnore()">Ignore</button>
   </div>
 
-  <div id="donation-overlay">
-    <div class="donation-text">
-      <strong>🎉 Milestone Reached!</strong><br />
-      You've completed <span id="transfer-count">10</span> clipboard syncs. Buy the dev a coffee?
-    </div>
-    <div class="actions">
-      <button class="btn-send" onclick="handleDonate()">Donate</button>
-      <button class="btn-ignore" onclick="handleNeverAskAgain()">Never Ask Again</button>
-    </div>
-  </div>
-
   <script>
     const { invoke } = window.__TAURI__.core || { invoke: async () => {} };
 
-    // Listen for clipboard updates or milestone triggers
     window.setPreviewText = function(text) {
       document.getElementById('snippet').innerText = text;
-    };
-
-    window.showDonationModal = function(count) {
-      document.getElementById('transfer-count').innerText = count;
-      document.getElementById('donation-overlay').style.display = 'flex';
     };
 
     async function handleSend() {
@@ -179,16 +149,7 @@
     async function handleIgnore() {
       await invoke('dismiss_popup');
     }
-
-    async function handleDonate() {
-      window.open('https://buymeacoffee.com', '_blank');
-      await invoke('dismiss_popup');
-    }
-
-    async function handleNeverAskAgain() {
-      await invoke('set_never_ask_again');
-      await invoke('dismiss_popup');
-    }
   </script>
 </body>
 </html>
+

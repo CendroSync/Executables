@@ -10,7 +10,7 @@ export function OnboardingModal({ visible, onClose }) {
     {
       icon: '⚡',
       badge: 'WELCOME',
-      title: 'Welcome to CendroSync!',
+      title: 'Welcome to CendrosyncP2P!',
       subtitle: 'Instant, encrypted local clipboard synchronization between Windows PC & Android.',
       bullets: [
         '🔒 End-to-End AES-256-GCM Encryption.',
@@ -25,7 +25,7 @@ export function OnboardingModal({ visible, onClose }) {
       subtitle: 'Pair your devices once on the same Wi-Fi network.',
       bullets: [
         '1. Ensure PC and Phone are connected to the same Wi-Fi network.',
-        '2. Note your PC pairing code in Windows CendroSync Control Center.',
+        '2. Note your PC pairing code in Windows CendrosyncP2P Control Center.',
         '3. On Android, type this PC code into "PAIR NEW DEVICE" box and tap Connect (or tap any discovered device).',
         '4. Accept the pair request to link your devices permanently.'
       ]
@@ -38,7 +38,7 @@ export function OnboardingModal({ visible, onClose }) {
       bullets: [
         '⚡ Notification Shade: Pull down your Android notification bar and tap "⚡ Beam to PC" anytime!',
         '📋 Quick Beam Button: Open app & tap "Beam Clipboard to Windows Now".',
-        '📤 Share Sheet: Highlight text in Chrome/apps, tap "Share", and select CendroSync.'
+        '📤 Share Sheet: Highlight text in Chrome/apps, tap "Share", and select CendrosyncP2P.'
       ]
     },
     {
@@ -61,7 +61,7 @@ export function OnboardingModal({ visible, onClose }) {
       bullets: [
         '• Android battery optimization can kill background network listeners.',
         '• Tap "⚙️ Battery Setup" inside the app.',
-        '• Set CendroSync battery usage to "Unrestricted" in Android Settings.',
+        '• Set CendrosyncP2P battery usage to "Unrestricted" in Android Settings.',
         '• Now clipboards beam even when your screen is off!'
       ]
     }

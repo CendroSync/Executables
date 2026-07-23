@@ -38,22 +38,3 @@ pub fn hide_micro_window(app_handle: &AppHandle) {
     }
 }
 
-pub fn show_donation_trigger(app_handle: &AppHandle, count: u32) {
-    if let Some(popup_window) = app_handle.get_webview_window("popup") {
-        let js = format!("if (window.showDonationModal) window.showDonationModal({});", count);
-        let _ = popup_window.eval(&js);
-
-        if let Ok(Some(monitor)) = popup_window.primary_monitor() {
-            let monitor_size = monitor.size();
-            let scale_factor = monitor.scale_factor();
-            let x = (monitor_size.width as i32) - ((340.0 * scale_factor) as i32) - ((20.0 * scale_factor) as i32);
-            let y = (monitor_size.height as i32) - ((130.0 * scale_factor) as i32) - ((60.0 * scale_factor) as i32);
-            let _ = popup_window.set_position(Position::Physical(PhysicalPosition { x, y }));
-        }
-
-        let _ = popup_window.unminimize();
-        let _ = popup_window.set_always_on_top(true);
-        let _ = popup_window.show();
-        let _ = popup_window.set_focus();
-    }
-}

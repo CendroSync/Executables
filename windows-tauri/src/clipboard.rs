@@ -1,18 +1,20 @@
 use arboard::Clipboard;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct ClipboardManager {
     /// Strict Infinite Loop Guard state lock.
     /// When true, incoming clipboard updates from the phone are ignored by the local watcher.
     pub is_self_triggered: Arc<AtomicBool>,
+    pub last_text: Arc<Mutex<String>>,
 }
 
 impl ClipboardManager {
     pub fn new() -> Self {
         Self {
             is_self_triggered: Arc::new(AtomicBool::new(false)),
+            last_text: Arc::new(Mutex::new(String::new())),
         }
     }
 
@@ -36,6 +38,11 @@ impl ClipboardManager {
             return Ok(());
         }
 
+        // Update last_text so the clipboard watcher knows this text is already synced
+        if let Ok(mut last) = self.last_text.lock() {
+            *last = clean_text.clone();
+        }
+
         // Set self-triggered lock TRUE before updating system clipboard
         self.set_self_triggered(true);
 
@@ -45,10 +52,11 @@ impl ClipboardManager {
         // Briefly wait then release self-triggered lock
         let lock_ref = self.is_self_triggered.clone();
         tokio::spawn(async move {
-            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
             lock_ref.store(false, Ordering::SeqCst);
         });
 
         res
     }
 }
+

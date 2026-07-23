@@ -2,8 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sanitizeText } from './CryptoService';
 
 const STORAGE_KEYS = {
-  TRANSFER_COUNT: '@p2p_transfer_count',
-  NEVER_ASK_AGAIN: '@p2p_never_ask_again',
   HISTORY: '@p2p_clipboard_history',
   PAIRED_DEVICES: '@p2p_paired_devices',
   PENDING_REQUESTS: '@p2p_pending_requests',
@@ -93,7 +91,7 @@ export class StorageTracker {
     } else {
       paired.push({
         code: device.code || `WIN-${Math.floor(100 + Math.random() * 900)}`,
-        name: device.name || 'CendroSync Windows PC',
+        name: device.name || 'CendrosyncP2P Windows PC',
         ip: device.ip,
         trusted: true,
       });
@@ -117,7 +115,6 @@ export class StorageTracker {
     if (!data) return [];
     try {
       const parsed = JSON.parse(data);
-      // Filter out any corrupted entries with non-printable binary text
       return parsed
         .map(item => ({
           ...item,
@@ -154,30 +151,5 @@ export class StorageTracker {
   static async clearHistory() {
     await AsyncStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify([]));
   }
-
-  static async incrementTransferCount() {
-    const neverAsk = await AsyncStorage.getItem(STORAGE_KEYS.NEVER_ASK_AGAIN);
-    if (neverAsk === 'true') return null;
-
-    const currentCountStr = await AsyncStorage.getItem(STORAGE_KEYS.TRANSFER_COUNT);
-    const currentCount = currentCountStr ? parseInt(currentCountStr, 10) : 0;
-    const newCount = currentCount + 1;
-
-    await AsyncStorage.setItem(STORAGE_KEYS.TRANSFER_COUNT, newCount.toString());
-
-    if ([10, 30, 50, 100].includes(newCount)) {
-      return newCount;
-    }
-
-    return null;
-  }
-
-  static async setNeverAskAgain() {
-    await AsyncStorage.setItem(STORAGE_KEYS.NEVER_ASK_AGAIN, 'true');
-  }
-
-  static async getTransferCount() {
-    const val = await AsyncStorage.getItem(STORAGE_KEYS.TRANSFER_COUNT);
-    return val ? parseInt(val, 10) : 0;
-  }
 }
+

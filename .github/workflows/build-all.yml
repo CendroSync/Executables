@@ -1,0 +1,130 @@
+name: CendrosyncP2P Multi-Platform CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # 1. Build Windows Desktop App
+  build-windows:
+    name: Build Windows Desktop App (.exe)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Tauri Windows Executable
+        run: |
+          cd windows-tauri
+          npm install
+          npx tauri build
+
+      - name: Upload Windows Binary Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CendrosyncP2P-Windows
+          path: |
+            windows-tauri/target/release/cendrosyncP2P.exe
+            windows-tauri/target/release/bundle/nsis/*.exe
+            windows-tauri/target/release/bundle/msi/*.msi
+
+  # 2. Build macOS Desktop App
+  build-macos:
+    name: Build macOS Desktop App (.dmg / .app)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Tauri macOS App
+        run: |
+          cd windows-tauri
+          npm install
+          npx tauri build
+
+      - name: Upload macOS Binary Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CendrosyncP2P-macOS
+          path: |
+            windows-tauri/target/release/bundle/dmg/*.dmg
+            windows-tauri/target/release/bundle/macos/*.app
+
+  # 3. Build Android Mobile App
+  build-android:
+    name: Build Android Mobile App (.apk)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          cd android-expo
+          npm install
+
+      - name: Build Android Release APK
+        run: |
+          cd android-expo/android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CendrosyncP2P-Android-APK
+          path: android-expo/android/app/build/outputs/apk/release/*.apk
+
+  # 4. Build iOS Mobile App Bundle
+  build-ios:
+    name: Build iOS Mobile App Bundle
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          cd android-expo
+          npm install
+
+      - name: Upload iOS Project Code
+        uses: actions/upload-artifact@v4
+        with:
+          name: CendrosyncP2P-iOS-Source
+          path: android-expo/

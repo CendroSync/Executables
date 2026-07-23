@@ -4,7 +4,6 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, SafeAr
 import { LocalTcpServer } from './src/services/LocalTcpServer';
 import { ShareIntentService } from './src/services/ShareIntentListener';
 import { StorageTracker } from './src/services/StorageTracker';
-import { DonationModal } from './src/components/DonationModal';
 import { OnboardingModal } from './src/components/OnboardingModal';
 import * as Clipboard from 'expo-clipboard';
 import * as Network from 'expo-network';
@@ -14,9 +13,6 @@ export default function App() {
   const [myCode, setMyCode] = useState('AND-92A');
   const [targetCode, setTargetCode] = useState('');
   const [history, setHistory] = useState([]);
-  const [transferCount, setTransferCount] = useState(0);
-  const [donationCount, setDonationCount] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isGuideVisible, setIsGuideVisible] = useState(false);
   const [discoveredDevices, setDiscoveredDevices] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -48,7 +44,7 @@ export default function App() {
 
       await notifee.displayNotification({
         id: 'p2p-sync-notification',
-        title: '⚡ P2P Clipboard Sync Active',
+        title: '⚡ CendrosyncP2P Sync Active',
         body: 'Tap "⚡ Beam" to send clipboard to PC',
         android: {
           channelId,
@@ -72,8 +68,6 @@ export default function App() {
 
   useEffect(() => {
     StorageTracker.getMyDeviceCode().then(setMyCode);
-
-    StorageTracker.getTransferCount().then(setTransferCount);
     refreshHistory();
     startForegroundService();
 
@@ -89,7 +83,6 @@ export default function App() {
       if (paired.length === 0) {
         scanNetwork();
       } else {
-        // Silently refresh IP for paired devices in background
         for (const d of paired) {
           const discovered = await ShareIntentService.autoDiscoverDeviceIp(d.code);
           if (discovered && discovered.ip && discovered.ip !== d.ip) {
@@ -106,15 +99,7 @@ export default function App() {
     tcpServer.startServer(52431, async (receivedText) => {
       await StorageTracker.addHistoryItem(receivedText, 'received');
       await refreshHistory();
-
-      StorageTracker.incrementTransferCount().then((milestone) => {
-        if (milestone) {
-          setDonationCount(milestone);
-          setIsModalVisible(true);
-        }
-      });
     }, async (device) => {
-      // On new pair request
       Alert.alert('Pairing Request', `${device.name} wants to pair with this device!`);
       await refreshDevices();
     });
@@ -123,7 +108,7 @@ export default function App() {
       if (type === EventType.ACTION_PRESS && detail.pressAction.id === 'beam') {
         setTimeout(async () => {
           await handleTestSend();
-        }, 300); // Small delay to let the app fully come to foreground
+        }, 300);
       }
     });
 
@@ -307,7 +292,7 @@ export default function App() {
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
             <Image source={require('./assets/logo.png')} style={{width: 44, height: 44, borderRadius: 10}} />
             <View>
-              <Text style={styles.title}>CendroSync</Text>
+              <Text style={styles.title}>CendrosyncP2P</Text>
               <Text style={styles.badge}>Clipboard & History</Text>
             </View>
           </View>
@@ -462,7 +447,7 @@ export default function App() {
         </View>
 
         <View style={styles.statsFooter}>
-          <Text style={styles.statsText}>Total Transfers Completed: {transferCount}</Text>
+          <Text style={styles.statsText}>Made with ❤️ by Cendronyx</Text>
         </View>
       </ScrollView>
 
@@ -470,14 +455,6 @@ export default function App() {
         visible={isGuideVisible}
         onClose={() => setIsGuideVisible(false)}
       />
-
-      {donationCount && (
-        <DonationModal
-          visible={isModalVisible}
-          count={donationCount}
-          onClose={() => setIsModalVisible(false)}
-        />
-      )}
     </SafeAreaView>
   );
 }

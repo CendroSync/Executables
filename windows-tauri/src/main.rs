@@ -134,12 +134,7 @@ async fn send_clipboard_payload(app: AppHandle, state: State<'_, AppState>) -> R
         }
     });
 
-    if let Some(milestone) = state.storage_mgr.increment_transfers() {
-        window_manager::show_donation_trigger(&app, milestone);
-    } else {
-        window_manager::hide_micro_window(&app);
-    }
-
+    window_manager::hide_micro_window(&app);
     Ok(())
 }
 
@@ -161,11 +156,6 @@ fn clear_history(state: State<'_, AppState>) {
 #[tauri::command]
 fn dismiss_popup(app: AppHandle) {
     window_manager::hide_micro_window(&app);
-}
-
-#[tauri::command]
-fn set_never_ask_again(state: State<'_, AppState>) {
-    state.storage_mgr.set_never_ask_again();
 }
 
 #[tauri::command]
@@ -262,7 +252,6 @@ fn unpair_device(state: State<'_, AppState>, code: String) {
 async fn main() {
     let clipboard_mgr = ClipboardManager::new();
     let storage_mgr = StorageManager::new();
-    let last_clipboard_text = std::sync::Arc::new(std::sync::Mutex::new(String::new()));
 
     let app_state = AppState {
         clipboard_mgr: clipboard_mgr.clone(),
@@ -275,7 +264,7 @@ async fn main() {
             // Initialize System Tray Menu
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("CendroSync")
+                .tooltip("CendrosyncP2P")
                 .on_tray_icon_event(move |tray, event| {
                     if let TrayIconEvent::Click { .. } = event {
                         println!("[Tray] System tray icon clicked -> Showing Control Center");
@@ -299,7 +288,6 @@ async fn main() {
             // Start Clipboard Watcher Loop Task
             let app_handle = app.handle().clone();
             let clip_mgr = clipboard_mgr.clone();
-            let last_text_ref = last_clipboard_text.clone();
 
             tauri::async_runtime::spawn(async move {
                 let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(600));
@@ -312,14 +300,19 @@ async fn main() {
                     }
 
                     if let Ok(current_text) = clip_mgr.get_text() {
-                        let mut last = last_text_ref.lock().unwrap();
-                        if !current_text.is_empty() && *last != current_text {
-                            *last = current_text.clone();
-                            drop(last);
+                        if current_text.trim().is_empty() {
+                            continue;
+                        }
 
-                            // Trigger bottom-right borderless micro-window popup
-                            println!("[Clipboard Watcher] New copy detected: {}", current_text);
-                            window_manager::show_micro_window(&app_handle, &current_text).ok();
+                        if let Ok(mut last) = clip_mgr.last_text.lock() {
+                            if *last != current_text {
+                                *last = current_text.clone();
+                                drop(last);
+
+                                // Trigger bottom-right borderless micro-window popup
+                                println!("[Clipboard Watcher] New copy detected: {}", current_text);
+                                window_manager::show_micro_window(&app_handle, &current_text).ok();
+                            }
                         }
                     }
                 }
@@ -330,7 +323,6 @@ async fn main() {
         .invoke_handler(tauri::generate_handler![
             send_clipboard_payload,
             dismiss_popup,
-            set_never_ask_again,
             get_local_ip,
             save_target_ip,
             show_popup_demo,
