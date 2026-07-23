@@ -261,15 +261,39 @@ async fn main() {
     tauri::Builder::default()
         .manage(app_state.clone())
         .setup(move |app| {
-            // Initialize System Tray Menu
+            // Initialize System Tray Menu with Right-Click Context Menu
+            use tauri::menu::{MenuBuilder, MenuItemBuilder};
+
+            let open_item = MenuItemBuilder::new("Open Control Center").id("open").build(app)?;
+            let quit_item = MenuItemBuilder::new("Quit CendroSync").id("quit").build(app)?;
+            let tray_menu = MenuBuilder::new(app).items(&[&open_item, &quit_item]).build()?;
+
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("CendrosyncP2P")
+                .menu(&tray_menu)
+                .on_menu_event(move |app_handle, event| {
+                    match event.id().as_ref() {
+                        "open" => {
+                            if let Some(main_win) = app_handle.get_webview_window("main") {
+                                let _ = main_win.unminimize();
+                                let _ = main_win.show();
+                                let _ = main_win.set_focus();
+                            }
+                        }
+                        "quit" => {
+                            println!("[Tray] Quit clicked. Exiting CendrosyncP2P...");
+                            std::process::exit(0);
+                        }
+                        _ => {}
+                    }
+                })
                 .on_tray_icon_event(move |tray, event| {
-                    if let TrayIconEvent::Click { .. } = event {
-                        println!("[Tray] System tray icon clicked -> Showing Control Center");
+                    if let TrayIconEvent::Click { button: tauri::tray::MouseButton::Left, .. } = event {
+                        println!("[Tray] System tray icon left-clicked -> Showing Control Center");
                         let handle = tray.app_handle();
                         if let Some(main_win) = handle.get_webview_window("main") {
+                            let _ = main_win.unminimize();
                             let _ = main_win.show();
                             let _ = main_win.set_focus();
                         }

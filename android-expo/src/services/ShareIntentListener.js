@@ -33,8 +33,8 @@ export class ShareIntentService {
               clearTimeout(timeoutId);
               if (res.ok) {
                 const info = await res.json();
-                if (!targetCode || info.device_code === targetCode || (info.device_name && info.device_name.toLowerCase().includes('windows'))) {
-                  return { ip: testIp, code: info.device_code, name: info.device_name };
+                if (info && info.device_code) {
+                  return { ip: testIp, code: info.device_code, name: info.device_name || 'Windows PC' };
                 }
               }
               return null;

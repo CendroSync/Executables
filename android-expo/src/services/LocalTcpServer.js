@@ -49,7 +49,7 @@ export class LocalTcpServer {
             const payload = JSON.parse(jsonString);
 
             // Handle Pair Requests from Windows
-            if (payload.sender_code && payload.sender_name) {
+            if (payload.sender_code && payload.sender_name && !payload.payload && !payload.ciphertext) {
               console.log(`[TcpServer] Received pair request from ${payload.sender_name} (${clientIp})`);
 
               const paired = await StorageTracker.getPairedDevices();
