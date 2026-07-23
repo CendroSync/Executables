@@ -50,8 +50,8 @@
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico",
-        "headerImage": "icons/128x128.png",
-        "sidebarImage": "icons/128x128@2x.png",
+        "headerImage": "icons/header.png",
+        "sidebarImage": "icons/sidebar.png",
         "languages": ["English"]
       }
     }
