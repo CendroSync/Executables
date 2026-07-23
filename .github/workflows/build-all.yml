@@ -216,24 +216,36 @@ jobs:
         with:
           path: release-assets
 
+      - name: Organize Clean Assets
+        run: |
+          mkdir -p final-assets
+          find release-assets -name "*.exe" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*.msi" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*.dmg" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*.deb" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*.AppImage" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*arm64*.apk" -exec cp {} final-assets/CendrosyncP2P-Android.apk \; 2>/dev/null || true
+          find release-assets -name "*iOS*.zip" -exec cp {} final-assets/CendrosyncP2P-iOS.zip \; 2>/dev/null || true
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
           name: CendrosyncP2P v1.0.0 Release
+          make_latest: true
           body: |
             ## ⚡ CendrosyncP2P v1.0.0 Release
 
             Instant, encrypted local P2P clipboard synchronization across Windows, macOS, Linux, Android, and iOS.
 
             ### Included Downloads:
-            - **🪟 Windows**: `cendrosyncP2P.exe` / Setup Installer (`.exe` & `.msi`)
-            - **🍏 macOS**: `CendrosyncP2P.dmg` / `CendrosyncP2P-macOS.app.zip`
-            - **🐧 Linux**: `.deb` installer & `.AppImage` standalone
-            - **🤖 Android**: `app-release.apk` (Sub-10MB single-architecture optimized)
-            - **📱 iOS**: `CendrosyncP2P-iOS-Package.zip`
+            - **🪟 Windows**: `cendrosyncP2P.exe` / `CendrosyncP2P_1.0.0_x64-setup.exe`
+            - **🍏 macOS**: `CendrosyncP2P_1.0.0_aarch64.dmg`
+            - **🐧 Linux**: `CendrosyncP2P_1.0.0_amd64.deb` / `.AppImage`
+            - **🤖 Android**: `CendrosyncP2P-Android.apk` (~21.8 MB optimized)
+            - **📱 iOS**: `CendrosyncP2P-iOS.zip`
           draft: false
           prerelease: false
-          files: release-assets/**/*
+          files: final-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
