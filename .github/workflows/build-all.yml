@@ -41,6 +41,14 @@ jobs:
           npm install
           npx tauri build
 
+      - name: Sign Windows Executables with Authenticode
+        shell: powershell
+        run: |
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Cendronyx, O=Cendronyx, C=US" -CertStoreLocation cert:\CurrentUser\My
+          Get-ChildItem -Path windows-tauri/target/release -Recurse -Include *.exe,*.msi | ForEach-Object {
+            Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
+          }
+
       - name: Upload Windows Binary Artifacts
         uses: actions/upload-artifact@v4
         with:
