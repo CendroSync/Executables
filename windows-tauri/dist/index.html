@@ -605,8 +605,17 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       loadHistory();
+      loadDevices();
       setupListeners();
       setInterval(loadHistory, 1500);
+      setInterval(loadDevices, 1200);
+
+      if (window.__TAURI__ && window.__TAURI__.event) {
+        window.__TAURI__.event.listen('new-pairing-request', () => {
+          loadDevices();
+        });
+      }
+
       if (!localStorage.getItem('p2p_has_seen_guide')) {
         showGuide();
       }

@@ -38,3 +38,12 @@ pub fn hide_micro_window(app_handle: &AppHandle) {
     }
 }
 
+pub fn show_main_window(app_handle: &AppHandle) {
+    if let Some(main_window) = app_handle.get_webview_window("main") {
+        let _ = main_window.unminimize();
+        let _ = main_window.show();
+        let _ = main_window.set_focus();
+    }
+}
+
+
