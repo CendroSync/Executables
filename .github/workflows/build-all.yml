@@ -228,7 +228,8 @@ jobs:
       - name: Organize Clean Assets
         run: |
           mkdir -p final-assets
-          find release-assets -name "*.exe" -exec cp {} final-assets/ \; 2>/dev/null || true
+          find release-assets -name "*setup*.exe" -exec cp {} final-assets/CendrosyncP2P-Setup.exe \; 2>/dev/null || true
+          find release-assets -name "cendrosync*.exe" ! -name "*setup*" -exec cp {} final-assets/CendrosyncP2P-Portable.exe \; 2>/dev/null || true
           find release-assets -name "*.msi" -exec cp {} final-assets/ \; 2>/dev/null || true
           find release-assets -name "*.dmg" -exec cp {} final-assets/ \; 2>/dev/null || true
           find release-assets -name "*.deb" -exec cp {} final-assets/ \; 2>/dev/null || true
