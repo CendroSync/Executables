@@ -236,13 +236,32 @@
   <script>
     const { invoke } = window.__TAURI__.core || { invoke: async () => {} };
 
+    let autoDismissTimer = null;
+
+    function resetAutoDismissTimer() {
+      if (autoDismissTimer) clearTimeout(autoDismissTimer);
+      autoDismissTimer = setTimeout(() => {
+        invoke('dismiss_popup');
+      }, 4000); // Auto-hide popup after 4 seconds
+    }
+
+    document.body.addEventListener('mouseenter', () => {
+      if (autoDismissTimer) clearTimeout(autoDismissTimer); // Pause timer when user hovers
+    });
+
+    document.body.addEventListener('mouseleave', () => {
+      resetAutoDismissTimer(); // Resume timer when mouse leaves
+    });
+
     window.setPreviewText = function(text) {
       document.getElementById('snippet').innerText = text;
+      resetAutoDismissTimer();
     };
 
     window.showDonationModal = function(count) {
       document.getElementById('transfer-count').innerText = count;
       document.getElementById('donation-overlay').style.display = 'flex';
+      if (autoDismissTimer) clearTimeout(autoDismissTimer); // Stop auto-dismiss on donation modal
     };
 
     async function toggleSettings() {

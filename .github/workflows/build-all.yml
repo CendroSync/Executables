@@ -45,6 +45,8 @@ jobs:
         shell: powershell
         run: |
           $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Cendronyx, O=Cendronyx, C=US" -CertStoreLocation cert:\CurrentUser\My
+          Export-Certificate -Cert $cert -FilePath "windows-tauri/target/release/CendronyxRootCert.cer"
+          Copy-Item "Trust-Cendronyx-Certificate.bat" "windows-tauri/target/release/"
           Get-ChildItem -Path windows-tauri/target/release/bundle -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | ForEach-Object {
             Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
           }
@@ -58,6 +60,8 @@ jobs:
           name: CendrosyncP2P-Windows
           path: |
             windows-tauri/target/release/*.exe
+            windows-tauri/target/release/CendronyxRootCert.cer
+            windows-tauri/target/release/Trust-Cendronyx-Certificate.bat
             windows-tauri/target/release/bundle/nsis/*.exe
             windows-tauri/target/release/bundle/msi/*.msi
 
@@ -234,6 +238,8 @@ jobs:
       - name: Organize Clean Assets
         run: |
           mkdir -p final-assets
+          cp Trust-Cendronyx-Certificate.bat final-assets/ 2>/dev/null || true
+          find release-assets -name "CendronyxRootCert.cer" -exec cp {} final-assets/ \; 2>/dev/null || true
           find release-assets -name "*setup*.exe" -exec cp {} final-assets/CendrosyncP2P-Setup.exe \; 2>/dev/null || true
           find release-assets -name "cendrosync*.exe" ! -name "*setup*" -exec cp {} final-assets/CendrosyncP2P-Portable.exe \; 2>/dev/null || true
           find release-assets -name "*.msi" -exec cp {} final-assets/ \; 2>/dev/null || true

@@ -24,7 +24,6 @@ pub fn show_micro_window(app_handle: &AppHandle, preview_text: &str) -> Result<(
         let _ = popup_window.unminimize();
         let _ = popup_window.set_always_on_top(true);
         let _ = popup_window.show();
-        let _ = popup_window.set_focus();
         println!("[WindowManager] Displayed micro-window popup!");
     } else {
         eprintln!("[WindowManager Error] 'popup' window not found!");
