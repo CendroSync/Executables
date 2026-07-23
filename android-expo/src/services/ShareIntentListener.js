@@ -18,39 +18,46 @@ export class ShareIntentService {
 
       console.log(`[AutoDiscover] Probing subnet ${subnetPrefix}.1..254 for device code ${targetCode || 'any'}...`);
 
-      const probePromises = [];
-      for (let i = 1; i <= 254; i++) {
-        const testIp = `${subnetPrefix}.${i}`;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const chunkSize = 32;
+      for (let i = 1; i <= 254; i += chunkSize) {
+        const chunkPromises = [];
+        for (let j = i; j < Math.min(i + chunkSize, 255); j++) {
+          const testIp = `${subnetPrefix}.${j}`;
+          if (testIp === ipAddress) continue;
 
-        probePromises.push(
-          fetch(`http://${testIp}:52431/api/v1/ping`, {
-            method: 'GET',
-            signal: controller.signal,
-          })
-            .then(async (res) => {
-              clearTimeout(timeoutId);
-              if (res.ok) {
-                const info = await res.json();
-                if (info && info.device_code) {
-                  return { ip: testIp, code: info.device_code, name: info.device_name || 'Windows PC' };
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1600);
+
+          chunkPromises.push(
+            fetch(`http://${testIp}:52431/api/v1/ping`, {
+              method: 'GET',
+              signal: controller.signal,
+            })
+              .then(async (res) => {
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                  const info = await res.json();
+                  if (info && info.device_code) {
+                    if (!targetCode || info.device_code === targetCode) {
+                      return { ip: testIp, code: info.device_code, name: info.device_name || 'Windows PC' };
+                    }
+                  }
                 }
-              }
-              return null;
-            })
-            .catch(() => {
-              clearTimeout(timeoutId);
-              return null;
-            })
-        );
-      }
+                return null;
+              })
+              .catch(() => {
+                clearTimeout(timeoutId);
+                return null;
+              })
+          );
+        }
 
-      const results = await Promise.all(probePromises);
-      const match = results.find((r) => r !== null);
-      if (match) {
-        console.log(`[AutoDiscover] Successfully located Windows device at ${match.ip} (${match.name})`);
-        return match;
+        const chunkResults = await Promise.all(chunkPromises);
+        const match = chunkResults.find((r) => r !== null);
+        if (match) {
+          console.log(`[AutoDiscover] Successfully located Windows device at ${match.ip} (${match.name})`);
+          return match;
+        }
       }
     } catch (err) {
       console.warn('[AutoDiscover] Error during subnet probe:', err);

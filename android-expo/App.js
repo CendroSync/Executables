@@ -313,7 +313,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
             <Image source={require('./assets/logo.png')} style={{width: 44, height: 44, borderRadius: 10}} />
