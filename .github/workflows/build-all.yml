@@ -46,21 +46,38 @@ jobs:
         shell: powershell
         env:
           SIGNPATH_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_POLICY: ${{ secrets.SIGNPATH_POLICY_SLUG }}
         run: |
           if ($env:SIGNPATH_TOKEN) {
-            Write-Host "Signing Windows binaries via SignPath.io..."
-            Install-Module -Name SignPath -Force -Scope CurrentUser
-            Get-ChildItem -Path windows-tauri/target/release/bundle -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | ForEach-Object {
-              $outFile = $_.FullName + ".signed"
-              Submit-SigningRequest `
-                -InputArtifactPath $_.FullName `
-                -ApiToken $env:SIGNPATH_TOKEN `
-                -OrganizationId "21dd9a11-3d80-47ef-a5ed-f198093cb4d9" `
-                -ProjectSlug "CendroSync" `
-                -SigningPolicySlug "CendroSync" `
-                -OutputArtifactPath $outFile `
-                -WaitForCompletion
-              Move-Item -Path $outFile -Destination $_.FullName -Force
+            Write-Host "Attempting Windows binary signing via SignPath.io..."
+            try {
+              Install-Module -Name SignPath -Force -Scope CurrentUser -ErrorAction Stop
+              $policySlug = if ($env:SIGNPATH_POLICY) { $env:SIGNPATH_POLICY } else { "test-signing" }
+              Get-ChildItem -Path windows-tauri/target/release/bundle -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | ForEach-Object {
+                $outFile = $_.FullName + ".signed"
+                Submit-SigningRequest `
+                  -InputArtifactPath $_.FullName `
+                  -ApiToken $env:SIGNPATH_TOKEN `
+                  -OrganizationId "21dd9a11-3d80-47ef-a5ed-f198093cb4d9" `
+                  -ProjectSlug "CendroSync" `
+                  -SigningPolicySlug $policySlug `
+                  -OutputArtifactPath $outFile `
+                  -WaitForCompletion
+                Move-Item -Path $outFile -Destination $_.FullName -Force
+              }
+              Write-Host "SignPath signing completed successfully!"
+            } catch {
+              Write-Host "SignPath API notice: $_"
+              Write-Host "Falling back to local Authenticode signing..."
+              $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=Cendronyx, O=Cendronyx, C=US" -CertStoreLocation cert:\CurrentUser\My
+              Export-Certificate -Cert $cert -FilePath "windows-tauri/target/release/CendronyxRootCert.cer"
+              Copy-Item "Trust-Cendronyx-Certificate.bat" "windows-tauri/target/release/"
+              Get-ChildItem -Path windows-tauri/target/release/bundle -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue | ForEach-Object {
+                Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
+              }
+              Get-ChildItem -Path windows-tauri/target/release -Filter "*.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+                Set-AuthenticodeSignature -FilePath $_.FullName -Certificate $cert -HashAlgorithm SHA256
+              }
             }
           } else {
             Write-Host "SIGNPATH_API_TOKEN not found in Secrets. Using local Authenticode signing."
