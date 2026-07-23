@@ -1,9 +1,9 @@
 node_modules/
 .expo/
-dist/
 build/
 *.log
 windows-tauri/target/
 windows-tauri/target_seq/
 windows-tauri/build_target/
 windows-tauri/clean_build/
+!windows-tauri/dist/

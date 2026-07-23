@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clipboard Quick Sync</title>
+  <style>
+    :root {
+      --bg: #12141c;
+      --card-bg: #1a1d28;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border: rgba(255, 255, 255, 0.08);
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .title-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .settings-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .settings-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .snippet-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: var(--card-bg);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    button.action-btn {
+      flex: 1;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-send {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .btn-send:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-ignore {
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ignore:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+    }
+
+    /* Settings Pairing Panel Overlay */
+    #settings-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 12px;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .settings-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .ip-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .ip-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .ip-input-row input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    /* Milestone Donation Card Overlay */
+    #donation-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 12px;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    .donation-text {
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">
+      <img src="logo.png" style="width:16px; height:16px; border-radius:4px; margin-right:4px;" alt="CendroSync Logo" />
+      CendroSync
+    </div>
+    <button class="settings-btn" onclick="toggleSettings()" title="Device Pairing & Wi-Fi IP Settings">⚙️</button>
+  </div>
+
+  <div class="snippet-preview" id="snippet">Text copied to clipboard</div>
+
+  <div class="actions">
+    <button class="action-btn btn-send" onclick="handleSend()">Send to Phone</button>
+    <button class="action-btn btn-ignore" onclick="handleIgnore()">Ignore</button>
+  </div>
+
+  <!-- Settings / Pairing Overlay -->
+  <div id="settings-overlay">
+    <div>
+      <div class="settings-title">📱 Device Pairing Settings</div>
+      <div class="ip-info">This PC IP: <strong id="pc-ip">192.168.1.X</strong></div>
+      <div class="ip-input-row">
+        <input type="text" id="target-ip-input" placeholder="Phone IP (e.g. 192.168.1.105)" />
+        <button class="action-btn btn-send" style="flex:0; padding: 4px 10px;" onclick="savePhoneIp()">Save</button>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="action-btn btn-ignore" onclick="toggleSettings()">Back</button>
+    </div>
+  </div>
+
+  <!-- Milestone Overlay -->
+  <div id="donation-overlay">
+    <div class="donation-text">
+      <strong>🎉 Milestone Reached!</strong><br />
+      You've completed <span id="transfer-count">10</span> clipboard syncs. Buy the dev a coffee?
+    </div>
+    <div class="actions">
+      <button class="action-btn btn-send" onclick="handleDonate()">Donate</button>
+      <button class="action-btn btn-ignore" onclick="handleNeverAskAgain()">Never Ask Again</button>
+    </div>
+  </div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core || { invoke: async () => {} };
+
+    window.setPreviewText = function(text) {
+      document.getElementById('snippet').innerText = text;
+    };
+
+    window.showDonationModal = function(count) {
+      document.getElementById('transfer-count').innerText = count;
+      document.getElementById('donation-overlay').style.display = 'flex';
+    };
+
+    async function toggleSettings() {
+      const panel = document.getElementById('settings-overlay');
+      const isVisible = panel.style.display === 'flex';
+      if (!isVisible) {
+        panel.style.display = 'flex';
+        try {
+          const pcIp = await invoke('get_local_ip');
+          const targetIp = await invoke('get_target_ip');
+          document.getElementById('pc-ip').innerText = pcIp;
+          document.getElementById('target-ip-input').value = targetIp;
+        } catch (e) {}
+      } else {
+        panel.style.display = 'none';
+      }
+    }
+
+    async function savePhoneIp() {
+      const ip = document.getElementById('target-ip-input').value;
+      if (ip) {
+        await invoke('save_target_ip', { ip });
+        alert('Phone IP saved!');
+        toggleSettings();
+      }
+    }
+
+    async function handleSend() {
+      await invoke('send_clipboard_payload');
+      await invoke('dismiss_popup');
+    }
+
+    async function handleIgnore() {
+      await invoke('dismiss_popup');
+    }
+
+    async function handleDonate() {
+      window.open('https://buymeacoffee.com', '_blank');
+      await invoke('dismiss_popup');
+    }
+
+    async function handleNeverAskAgain() {
+      await invoke('set_never_ask_again');
+      await invoke('dismiss_popup');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P2P Clipboard Sync - Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --card-bg: rgba(26, 29, 40, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #6366f1;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(18, 20, 28, 0.95);
+      border-right: 1px solid var(--card-border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .nav-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-item.active {
+      background: rgba(99, 102, 241, 0.12);
+      color: #fff;
+    }
+
+    .main-panel {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .code-box {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .code-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: #818cf8;
+      letter-spacing: 2px;
+    }
+
+    .full-card {
+      grid-column: span 2;
+    }
+
+    /* History Item Controls */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+
+    .badge-sent {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+    }
+
+    .badge-received {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+
+    .history-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 420px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .icon-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="brand">
+        <img src="logo.png" style="width:32px; height:32px; border-radius:8px;" alt="CendrosyncP2P Logo" />
+        <div class="brand-title" style="font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CendrosyncP2P</div>
+      </div>
+      <ul class="nav-list" id="nav-tabs">
+        <li class="nav-item active" data-tab="history" onclick="switchTab('history')">📋 Clipboard History</li>
+        <li class="nav-item" data-tab="devices" onclick="switchTab('devices')">💻 Devices & Pairing</li>
+      </ul>
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted); text-align: center; padding-top: 12px; border-top: 1px solid var(--card-border);">
+      Made with ❤️ by Cendronyx
+    </div>
+  </div>
+
+  <div class="main-panel" id="history-view">
+    <div class="top-bar">
+      <h1 class="page-title">Clipboard History & Transfers</h1>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;" onclick="showGuide()">❓ User Guide</button>
+        <button class="btn" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;" onclick="clearAllHistory()">🧹 Clear All History</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Your Device Code -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">This Device Pairing Code</span>
+        </div>
+        <div class="code-box">
+          <div class="code-value" id="my-device-code">------</div>
+        </div>
+      </div>
+
+      <!-- Quick Beam -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Manual Beam</span>
+        </div>
+        <button class="btn" style="width: 100%; padding: 12px;" onclick="sendCurrentClipboard()">Beam Current Clipboard to Phone</button>
+      </div>
+
+      <!-- History Section -->
+      <div class="card full-card">
+        <div class="card-header">
+          <span class="card-title">Synced Clipboard History Log</span>
+          <button class="btn" onclick="loadHistory()">Refresh</button>
+        </div>
+
+        <div class="history-list" id="history-list">
+          <div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">
+            No history entries yet. Copy text or beam clipboards to see history!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-panel" id="devices-view" style="display: none;">
+    <div class="top-bar">
+      <h1 class="page-title">Devices & Pairing</h1>
+    </div>
+
+    <div class="grid">
+      <div class="card full-card">
+        <div class="card-header">
+          <span class="card-title">Pending Pairing Requests</span>
+          <button class="btn" onclick="loadDevices()">Refresh</button>
+        </div>
+        <div class="history-list" id="pending-list">
+          <div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">
+            No pending pairing requests.
+          </div>
+        </div>
+      </div>
+
+      <div class="card full-card">
+        <div class="card-header">
+          <span class="card-title">Trusted Paired Devices</span>
+        </div>
+        <div class="history-list" id="paired-list">
+          <div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">
+            No paired devices.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core || { invoke: async () => {} };
+    const { listen } = window.__TAURI__.event || { listen: async () => {} };
+
+    function switchTab(tabId) {
+      document.getElementById('history-view').style.display = tabId === 'history' ? 'flex' : 'none';
+      document.getElementById('devices-view').style.display = tabId === 'devices' ? 'flex' : 'none';
+      
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
+
+      if (tabId === 'devices') loadDevices();
+      else loadHistory();
+    }
+
+    async function setupListeners() {
+      if (window.__TAURI__ && window.__TAURI__.event) {
+        await listen('new-pairing-request', (event) => {
+          alert(`New pairing request from ${event.payload}! Go to the Devices tab to accept it.`);
+          loadDevices();
+        });
+
+        await listen('history-updated', () => {
+          loadHistory();
+        });
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const code = await invoke('get_device_code');
+        document.getElementById('my-device-code').innerText = code;
+
+        const history = await invoke('get_history');
+        const container = document.getElementById('history-list');
+
+        if (!history || history.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">
+              No history entries yet. Copy text or beam clipboards to see history!
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = history.map(item => `
+          <div class="history-item">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="history-badge ${item.direction === 'sent' ? 'badge-sent' : 'badge-received'}">
+                ${item.direction === 'sent' ? '💻 Sent' : '📱 Received'}
+              </span>
+              <span class="history-text">${escapeHtml(item.text)}</span>
+            </div>
+            <div class="history-actions">
+              <button class="icon-btn" onclick="copyItem('${escapeHtml(item.text)}')">📋 Copy</button>
+              <button class="icon-btn danger" onclick="deleteItem('${item.id}')">🗑️ Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    async function copyItem(text) {
+      await navigator.clipboard.writeText(text);
+      alert('Copied to system clipboard!');
+    }
+
+    async function deleteItem(id) {
+      await invoke('delete_history_item', { id });
+      await loadHistory();
+    }
+
+    async function clearAllHistory() {
+      if (confirm('Are you sure you want to clear all clipboard history?')) {
+        await invoke('clear_history');
+        await loadHistory();
+      }
+    }
+
+    async function sendCurrentClipboard() {
+      try {
+        await invoke('send_clipboard_payload');
+        await loadHistory();
+      } catch (e) {
+        alert('Error: ' + e);
+      }
+    }
+
+    async function loadDevices() {
+      try {
+        const pending = await invoke('get_pending_requests');
+        const paired = await invoke('get_paired_devices');
+        
+        const pContainer = document.getElementById('pending-list');
+        if (!pending || pending.length === 0) {
+          pContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">No pending requests.</div>`;
+        } else {
+          pContainer.innerHTML = pending.map(dev => `
+            <div class="history-item">
+              <span class="history-text">${escapeHtml(dev.name)} (${escapeHtml(dev.ip)}) - Code: <strong>${escapeHtml(dev.code)}</strong></span>
+              <div class="history-actions">
+                <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="acceptRequest('${dev.code}')">✔️ Accept</button>
+                <button class="icon-btn danger" onclick="rejectRequest('${dev.code}')">❌ Reject</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        const pairedContainer = document.getElementById('paired-list');
+        if (!paired || paired.length === 0) {
+          pairedContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 12px;">No paired devices.</div>`;
+        } else {
+          pairedContainer.innerHTML = paired.map(dev => `
+            <div class="history-item">
+              <span class="history-text">✅ ${escapeHtml(dev.name)} (${escapeHtml(dev.ip)})</span>
+              <div class="history-actions">
+                <button class="icon-btn danger" onclick="unpairDevice('${dev.code}')">🗑️ Unpair</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function acceptRequest(code) {
+      try {
+        await invoke('accept_request', { code });
+        await loadDevices();
+        alert('Device paired successfully! It is now trusted for life.');
+      } catch (e) {
+        alert('Failed to accept: ' + e);
+      }
+    }
+
+    async function rejectRequest(code) {
+      await invoke('reject_request', { code });
+      await loadDevices();
+    }
+
+    async function unpairDevice(code) {
+      if (confirm('Are you sure you want to unpair this device? It will no longer be able to sync clipboards.')) {
+        await invoke('unpair_device', { code });
+        await loadDevices();
+      }
+    }
+
+    const winGuideSteps = [
+      {
+        icon: '⚡',
+        badge: 'WELCOME',
+        title: 'Welcome to CendrosyncP2P!',
+        subtitle: 'Instant, encrypted local clipboard synchronization between Windows PC & Android.',
+        bullets: [
+          '🔒 End-to-End AES-256-GCM Encryption.',
+          '📡 Direct local Wi-Fi transfer—no cloud or remote servers.',
+          '⚡ Zero latency clipboard sharing.'
+        ]
+      },
+      {
+        icon: '🔗',
+        badge: 'STEP 1: PAIRING',
+        title: 'One-Time Device Pairing',
+        subtitle: 'Connect your PC and Android phone on the same Wi-Fi network.',
+        bullets: [
+          '1. Connect PC and Phone to the same Wi-Fi network.',
+          '2. Note your Windows PC pairing code at top of screen (e.g. F0NMDQ).',
+          '3. On Android, type this PC code into "PAIR NEW DEVICE" box and tap Connect (or select any discovered device).',
+          '4. Click Accept on the pairing prompt to link your devices permanently.'
+        ]
+      },
+      {
+        icon: '💻',
+        badge: 'STEP 2: WINDOWS → ANDROID',
+        title: 'Beaming PC → Phone',
+        subtitle: 'Automatic copy detection on your Windows PC:',
+        bullets: [
+          '1. Copy any text on Windows (Ctrl+C).',
+          '2. A micro-popup appears in the bottom right corner of your PC screen.',
+          '3. Click "Send to Phone" to beam it to your Android clipboard instantly!',
+          '4. Taskbar System Tray icon gives quick access anytime.'
+        ]
+      },
+      {
+        icon: '📱',
+        badge: 'STEP 3: ANDROID → WINDOWS',
+        title: 'Beaming Phone → PC',
+        subtitle: '3 easy ways to send text from your Android phone:',
+        bullets: [
+          '⚡ Notification Bar: Pull down your Android notification shade and tap "⚡ Beam to PC" anytime!',
+          '📋 Quick Beam Button: Open the Android app & tap "Beam Clipboard to Windows Now".',
+          '📤 Share Sheet: Highlight text in Chrome/apps, tap "Share", and select CendrosyncP2P.'
+        ]
+      },
+      {
+        icon: '⚙️',
+        badge: 'STEP 4: BATTERY SETUP',
+        title: 'Android Background Service',
+        subtitle: 'Ensure background clipboard beaming when phone is locked:',
+        bullets: [
+          '• Tap "⚙️ Battery Setup" inside the Android app.',
+          '• Set CendrosyncP2P battery usage to "Unrestricted" in Android Settings.',
+          '• Now clipboards beam seamlessly even when your phone is locked!'
+        ]
+      }
+    ];
+
+    let currentWinStep = 0;
+
+    function renderWinStep() {
+      const step = winGuideSteps[currentWinStep];
+      document.getElementById('guide-badge').innerText = `${step.badge} (${currentWinStep + 1}/${winGuideSteps.length})`;
+      const iconBox = document.getElementById('guide-icon-box');
+      
+      if (currentWinStep === 0) {
+        iconBox.style.background = 'transparent';
+        document.getElementById('guide-icon').innerHTML = '<img src="logo.png" style="width:60px; height:60px; border-radius:14px; display:block;" />';
+      } else {
+        iconBox.style.background = 'rgba(99, 102, 241, 0.15)';
+        document.getElementById('guide-icon').innerText = step.icon;
+      }
+      document.getElementById('guide-title').innerText = step.title;
+      document.getElementById('guide-subtitle').innerText = step.subtitle;
+
+      const bulletsHtml = step.bullets.map(b => `<div style="margin-bottom: 10px; font-size: 13px; color: #f3f4f6; line-height: 1.5;">${b}</div>`).join('');
+      document.getElementById('guide-bullets').innerHTML = bulletsHtml;
+
+      const dotsHtml = winGuideSteps.map((_, i) =>
+        `<div style="width: ${i === currentWinStep ? '22px' : '8px'}; height: 8px; border-radius: 4px; background: ${i === currentWinStep ? '#6366f1' : 'rgba(255,255,255,0.2)'}; transition: all 0.2s;"></div>`
+      ).join('');
+      document.getElementById('guide-dots').innerHTML = dotsHtml;
+
+      document.getElementById('guide-back-btn').style.visibility = currentWinStep > 0 ? 'visible' : 'hidden';
+
+      const nextBtn = document.getElementById('guide-next-btn');
+      if (currentWinStep < winGuideSteps.length - 1) {
+        nextBtn.innerText = 'Next →';
+        nextBtn.className = 'btn';
+        nextBtn.style.background = '#6366f1';
+        nextBtn.onclick = () => { currentWinStep++; renderWinStep(); };
+      } else {
+        nextBtn.innerText = "Got It, Let's Sync! 🚀";
+        nextBtn.className = 'btn';
+        nextBtn.style.background = '#10b981';
+        nextBtn.onclick = closeGuide;
+      }
+    }
+
+    function showGuide() {
+      currentWinStep = 0;
+      renderWinStep();
+      document.getElementById('guide-overlay').style.display = 'flex';
+    }
+
+    function closeGuide() {
+      document.getElementById('guide-overlay').style.display = 'none';
+      localStorage.setItem('p2p_has_seen_guide', 'true');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadHistory();
+      setupListeners();
+      setInterval(loadHistory, 1500);
+      if (!localStorage.getItem('p2p_has_seen_guide')) {
+        showGuide();
+      }
+    });
+  </script>
+
+  <!-- User Guide Modal Overlay -->
+  <div id="guide-overlay" style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 13, 0.88); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: #161922; border: 1.5px solid rgba(99, 102, 241, 0.4); border-radius: 20px; width: 540px; max-width: 92%; height: 500px; max-height: 90%; display: flex; flex-direction: column; overflow: hidden; color: #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.7);">
+      
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #12141c; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <span id="guide-badge" style="color: #818cf8; font-size: 11px; font-weight: 800; letter-spacing: 1.5px;">WELCOME (1/5)</span>
+        <button onclick="closeGuide()" style="background: rgba(255,255,255,0.05); border: none; color: #9ca3af; font-size: 16px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Body Content -->
+      <div style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center;">
+        <div id="guide-icon-box" style="width: 60px; height: 60px; border-radius: 30px; background: rgba(99, 102, 241, 0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+          <span id="guide-icon" style="font-size: 28px; display: flex; align-items: center; justify-content: center;">⚡</span>
+        </div>
+        <h2 id="guide-title" style="font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px;">Welcome to CendroSync!</h2>
+        <p id="guide-subtitle" style="font-size: 13px; color: #9ca3af; text-align: center; margin-bottom: 16px; line-height: 1.4;">Subtitle</p>
+
+        <div id="guide-bullets" style="width: 100%; background: #1d212d; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px;">
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding: 16px; background: #12141c; border-top: 1px solid rgba(255,255,255,0.08);">
+        <div id="guide-dots" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 14px;">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button id="guide-back-btn" onclick="if(currentWinStep>0){currentWinStep--; renderWinStep();}" class="icon-btn" style="padding: 8px 16px; font-size: 13px; color: #9ca3af;">← Back</button>
+          <button id="guide-next-btn" class="btn" style="padding: 10px 22px; font-size: 14px; font-weight: bold;">Next →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
