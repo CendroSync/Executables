@@ -236,6 +236,12 @@ jobs:
           find release-assets -name "*arm64*.apk" -exec cp {} final-assets/CendrosyncP2P-Android.apk \; 2>/dev/null || true
           find release-assets -name "*iOS*.zip" -exec cp {} final-assets/CendrosyncP2P-iOS.zip \; 2>/dev/null || true
 
+      - name: Delete Stale Release Assets (if exists)
+        run: |
+          gh release delete v1.0.0 --cleanup-tag -y 2>/dev/null || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
