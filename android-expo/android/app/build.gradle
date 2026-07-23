@@ -82,6 +82,7 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
+    namespace 'com.cendronyx.cendrosyncp2p'
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -97,7 +98,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.p2pclipboard.sync'
+        applicationId 'com.cendronyx.cendrosyncp2p'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
